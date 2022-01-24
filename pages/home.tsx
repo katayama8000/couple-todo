@@ -1,17 +1,13 @@
 import React, { useState } from "react";
 import type { NextPage } from "next";
-//import { useCounter } from "../hooks/useCounter";
+import useSWR from "swr";
 
 const Home: NextPage = () => {
-  //const { count } = useCounter();
-  const click = () => console.log("hello");
-
+  const { data, error } = useSWR("https://jsonplaceholder.typicode.com/todos");
+  console.log({ data, error });
   return (
     <>
-      <h1 className="text-center font-bold p-5 bg-indigo-400">
-        this is a Home
-      </h1>
-      <button onClick={() => click()}>count</button>
+      
     </>
   );
 };

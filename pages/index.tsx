@@ -1,7 +1,10 @@
 import type { NextPage } from "next";
 import { useState } from "react";
 
-import styles from "../styles/Home.module.css";
+import { ChangeThemeButton } from "../components/ChangeThemeButton";
+import { DoneModal } from "../components/DoneModal";
+import { useInput } from "../hooks/useInput";
+
 
 type Todo = {
   value: string;
@@ -10,35 +13,30 @@ type Todo = {
   removed: boolean;
 };
 
-const useInput = () => {
-  //  const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //    setTmpTodo(e.target.value);
-  //  };
-  // return { handleOnChange };
-}
 
 const Home: NextPage = () => {
-  const [tmpTodo, setTmpTodo] = useState<string>("");
-  const [todos, setTodos] = useState<Todo[]>([]);
-  //const { handleOnChange } = useInput();
+  // const [tmpTodo, setTmpTodo] = useState<string>("");
+  // const [todos, setTodos] = useState<Todo[]>([]);
+  const [done,setDone] = useState(false)
+  const { tmpTodo, todos,setTodos, handleOnChange, handleOnSubmit } = useInput();
 
-  const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTmpTodo(e.target.value);
-  };
+  // const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setTmpTodo(e.target.value);
+  // };
 
-  const handleOnSubmit = () => {
-    if (!tmpTodo) return;
+  // const handleOnSubmit = () => {
+  //   if (!tmpTodo) return;
 
-    const newTodo: Todo = {
-      value: tmpTodo,
-      id: new Date().getTime(),
-      checked: false,
-      removed: false,
-    };
+  //   const newTodo: Todo = {
+  //     value: tmpTodo,
+  //     id: new Date().getTime(),
+  //     checked: false,
+  //     removed: false,
+  //   };
 
-    setTodos([...todos, newTodo]);
-    setTmpTodo("");
-  };
+  //   setTodos([...todos, newTodo]);
+  //   setTmpTodo("");
+  // };
 
   const handleOnEdit = (id: number, value: string) => {
     const deepCopy = todos.map((todo) => ({ ...todo }));
@@ -81,10 +79,18 @@ const Home: NextPage = () => {
   };
 
   return (
-    <div className={styles.container}>
-      <h1 className="p-5 text-center text-3xl text-white bg-red-500 font-bold ">
+    <div className="mx-5 pb-24">
+      <h1 className="my-3 p-5 text-center text-3xl text-white bg-indigo-400 font-bold rounded">
         夫婦の買い物
       </h1>
+      {done ? (
+        <DoneModal
+          onClick={() => {
+            setDone(false);
+          }}
+        />
+      ) : null}
+      <ChangeThemeButton />
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -96,32 +102,42 @@ const Home: NextPage = () => {
           type="text"
           value={tmpTodo}
           onChange={(e) => handleOnChange(e)}
-          className="bg-red-500 border-gray-900"
+          className="bg-indigo-400"
         />
         <input type="submit" value="追加" onSubmit={handleOnSubmit} />
-        <ul>
-          {todos.map((todo) => {
-            return (
-              <li key={todo.id}>
-                <input
-                  type="checkbox"
-                  checked={todo.checked}
-                  onChange={() => handleOnCheck(todo.id, todo.checked)}
-                />
-                <input
-                  type="text"
-                  disabled={todo.checked}
-                  value={todo.value}
-                  onChange={(e) => handleOnEdit(todo.id, e.target.value)}
-                />
-                <button onClick={() => handleOnRemove(todo.id, todo.removed)}>
-                  {todo.removed ? "復元" : "削除"}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
       </form>
+      <ul>
+        {todos.map((todo) => {
+          return (
+            <li key={todo.id}>
+              <input
+                type="checkbox"
+                checked={todo.checked}
+                onChange={() => handleOnCheck(todo.id, todo.checked)}
+              />
+              <input
+                type="text"
+                disabled={todo.checked}
+                value={todo.value}
+                onChange={(e) => handleOnEdit(todo.id, e.target.value)}
+              />
+              <button onClick={() => handleOnRemove(todo.id, todo.removed)}>
+                {todo.removed ? "復元" : "削除"}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      <div className="fixed bottom-0 inset-x-0 p-4 text-center text-white text-3xl bg-gray-700">
+        <button
+          onClick={() => {
+            setDone(true);
+          }}
+          className="block m-auto px-4 py-2 w-11/12 text-white text-xl font-semibold bg-indigo-400 rounded shadow"
+        >
+          買い物終了
+        </button>
+      </div>
     </div>
   );
 };
