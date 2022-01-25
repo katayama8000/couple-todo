@@ -115,15 +115,18 @@ const Home: NextPage = () => {
   };
 
   const over = async () => {
+    let i:number = 0
     data?.forEach((list) => {
       if (list.checked === false) {
         setOverM(true)
+      } else {
+        i++
       }
     });
 
-    // await setDoc(doc(db, "shopping", "List"), {
-    //   shoppingList: data,
-    // });
+    if (data!.length === i) {
+      setDone(true)
+    }
   };
 
   return (
@@ -224,7 +227,8 @@ const Home: NextPage = () => {
       <div className="fixed bottom-0 inset-x-0 p-4 text-center text-white text-3xl bg-gray-700">
         <button
           onClick={() => {
-            setDone(true);
+            //setDone(true);
+            over()
           }}
           className="block m-auto px-4 py-2 w-11/12 text-white text-xl font-semibold bg-indigo-400 rounded shadow"
         >
