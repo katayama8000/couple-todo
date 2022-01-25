@@ -1,81 +1,129 @@
 import type { NextPage } from "next";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ChangeThemeButton } from "../components/ChangeThemeButton";
 import { DoneModal } from "../components/DoneModal";
-import { useInput } from "../hooks/useInput";
+import { OverModal } from "../components/OverModal";
+import { useSend } from "../hooks/useSend";
+import { db } from "../firebase";
+import {
+  setDoc,
+  collection,
+  onSnapshot,
+  doc,
+  query,
+  getDocs,
+  updateDoc,
+} from "firebase/firestore";
 
-
-type Todo = {
+type list = {
   value: string;
   readonly id: number;
   checked: boolean;
   removed: boolean;
 };
 
-
 const Home: NextPage = () => {
-  // const [tmpTodo, setTmpTodo] = useState<string>("");
-  // const [todos, setTodos] = useState<Todo[]>([]);
-  const [done,setDone] = useState(false)
-  const { tmpTodo, todos,setTodos, handleOnChange, handleOnSubmit } = useInput();
+  const [done, setDone] = useState(false);
+  const [overM, setOverM] = useState(false);
+  const [data, setData] = useState<list[]>();
 
-  // const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   setTmpTodo(e.target.value);
-  // };
+  const { tmplist, lists, setLists, handleOnChange, handleOnSubmit } =
+    useSend();
 
-  // const handleOnSubmit = () => {
-  //   if (!tmpTodo) return;
-
-  //   const newTodo: Todo = {
-  //     value: tmpTodo,
-  //     id: new Date().getTime(),
-  //     checked: false,
-  //     removed: false,
+  //DBをクリアしてしまうのでとりあえずなし
+  // useEffect(() => {
+  //   const send = async () => {
+  //     await setDoc(doc(db, "shopping", "List"), {
+  //       shoppingList: lists,
+  //     });
   //   };
+  //   send();
+  // }, [lists]);
 
-  //   setTodos([...todos, newTodo]);
-  //   setTmpTodo("");
-  // };
+  useEffect(() => {
+      onSnapshot(doc(db, "shopping", "List"), (doc) => {
+      let tmp = doc.data();
+      setData(tmp?.shoppingList);
+    });
+  }, []);
 
   const handleOnEdit = (id: number, value: string) => {
-    const deepCopy = todos.map((todo) => ({ ...todo }));
-
+    const deepCopy = lists.map((list) => ({ ...list }));
     // ディープコピーされた配列に Array.map() を適用
-    const newTodos = deepCopy.map((todo) => {
-      if (todo.id === id) {
-        todo.value = value;
+    const newlists = deepCopy.map((list) => {
+      if (list.id === id) {
+        list.value = value;
       }
-      return todo;
+      return list;
     });
-
-    setTodos(newTodos);
+    setLists(newlists);
   };
 
-  const handleOnCheck = (id: number, checked: boolean) => {
-    const deepCopy = todos.map((todo) => ({ ...todo }));
+  const handleOnCheck = async(id: number, checked: boolean) => {
+    const deepCopy = lists.map((list) => ({ ...list }));
 
-    const newTodos = deepCopy.map((todo) => {
-      if (todo.id === id) {
-        todo.checked = !checked;
+    const newlists = deepCopy.map((list) => {
+      if (list.id === id) {
+        list.checked = !checked;
       }
-      return todo;
+      return list;
     });
-
-    setTodos(newTodos);
+    setLists(newlists);
+    
   };
 
   const handleOnRemove = (id: number, removed: boolean) => {
-    const deepCopy = todos.map((todo) => ({ ...todo }));
-
-    const newTodos = deepCopy.map((todo) => {
-      if (todo.id === id) {
-        todo.removed = !removed;
+    const deepCopy = lists.map((list) => ({ ...list }));
+    const newlists = deepCopy.map((list) => {
+      if (list.id === id) {
+        list.removed = !removed;
       }
-      return todo;
+      return list;
+    });
+    setLists(newlists);
+  };
+
+  const remove = async(id: number) => {
+    // const deepCopy = data?.map((list) => ({ ...list }));
+    let array:any[] = []
+    data?.forEach((list) => {
+      if (list.id !== id) {
+        array.push(list)
+      }
+    });
+    setData(array)
+
+    await setDoc(doc(db, "shopping", "List"), {
+      shoppingList: data,
+    });
+  }
+
+  const check = async (id: number, checked: boolean) => {
+    let newlists:list[] = []
+    newlists = data!.map((list) => {
+      if (list.id === id) {
+        list.checked = !checked;
+      }
+      return list
+    });
+    setData(newlists);
+
+    await setDoc(doc(db, "shopping", "List"), {
+      shoppingList: data,
+    });
+  };
+
+  const over = async () => {
+    data?.forEach((list) => {
+      if (list.checked === false) {
+        setOverM(true)
+      }
     });
 
-    setTodos(newTodos);
+    // await setDoc(doc(db, "shopping", "List"), {
+    //   shoppingList: data,
+    // });
   };
 
   return (
@@ -90,7 +138,22 @@ const Home: NextPage = () => {
           }}
         />
       ) : null}
+      {overM ? (
+        <OverModal
+          onClick={() => {
+            setOverM(false);
+          }}
+        />
+      ) : null}
+
       <ChangeThemeButton />
+      <button
+        onClick={() => {
+          console.log(lists);
+        }}
+      >
+        console
+      </button>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -100,29 +163,59 @@ const Home: NextPage = () => {
       >
         <input
           type="text"
-          value={tmpTodo}
+          value={tmplist}
           onChange={(e) => handleOnChange(e)}
           className="bg-indigo-400"
         />
         <input type="submit" value="追加" onSubmit={handleOnSubmit} />
       </form>
       <ul>
-        {todos.map((todo) => {
+        {lists.map((list) => {
           return (
-            <li key={todo.id}>
+            <li key={list.id}>
               <input
                 type="checkbox"
-                checked={todo.checked}
-                onChange={() => handleOnCheck(todo.id, todo.checked)}
+                checked={list.checked}
+                onChange={() => handleOnCheck(list.id, list.checked)}
               />
               <input
                 type="text"
-                disabled={todo.checked}
-                value={todo.value}
-                onChange={(e) => handleOnEdit(todo.id, e.target.value)}
+                disabled={list.checked}
+                value={list.value}
+                onChange={(e) => handleOnEdit(list.id, e.target.value)}
               />
-              <button onClick={() => handleOnRemove(todo.id, todo.removed)}>
-                {todo.removed ? "復元" : "削除"}
+              <button onClick={() => handleOnRemove(list.id, list.removed)}>
+                {list.removed ? "復元" : "削除"}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      <hr></hr>
+      <h1
+        onClick={() => {
+          over()
+        }}
+      >
+        終了
+      </h1>
+      <ul>
+        {data?.map((list: list) => {
+          return (
+            <li key={list.id}>
+              <input
+                type="checkbox"
+                checked={list.checked}
+                onChange={() => check(list.id, list.checked)}
+              />
+              <input
+                type="text"
+                disabled={list.checked}
+                value={list.value}
+                onChange={(e) => handleOnEdit(list.id, e.target.value)}
+              />
+              <button onClick={() => remove(list.id)}>
+                {list.removed ? "復元" : "削除"}
               </button>
             </li>
           );
