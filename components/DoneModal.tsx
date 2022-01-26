@@ -1,28 +1,40 @@
 import React, { useState } from "react";
+//global
+import { flagState } from "../pages/index";
+//FB
+import { doc, deleteDoc } from "firebase/firestore";
+import { setDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 const useInputSum = () => {
   const [sum, setSum] = useState<number>();
-  const [tmpSum, setTmpSum] = useState<number>();
-  const handleOnSubmit = () => {
+  const handleOnSubmit = async () => {
+    console.log(sum)
     if (!sum) {
       alert("合計金額を入力してください");
       return;
     }
-    setSum(tmpSum);
+    let today = new Date();
+    await setDoc(doc(db, "shopping", "totalCost"), {
+      cost: sum,
+      year: today.getFullYear(),
+      month: today.getMonth() + 1,
+      day: today.getDate(),
+    });
+    flagState.doneFlag = !flagState.doneFlag;
   };
   const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTmpSum(e.target.valueAsNumber);
+    setSum(e.target.valueAsNumber);
   };
   return { sum, handleOnSubmit, handleOnChange };
 };
 
-export const DoneModal = (props: any) => {
+export const DoneModal = () => {
   const { sum, handleOnSubmit, handleOnChange } = useInputSum();
 
-  const finishShopping = ():void => {
-    //firebaseに送信
-    props.onClick();
-  }
+  const shoppingIsOver = (): void => {
+    flagState.doneFlag = !flagState.doneFlag;
+  };
 
   return (
     <div>
@@ -47,6 +59,7 @@ export const DoneModal = (props: any) => {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
+                  handleOnSubmit();
                 }}
                 className="my-5"
               >
@@ -62,7 +75,7 @@ export const DoneModal = (props: any) => {
             <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
               <button
                 onClick={() => {
-                  finishShopping();
+                  handleOnSubmit();
                 }}
                 type="button"
                 className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-400 text-base font-medium text-white hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -70,7 +83,9 @@ export const DoneModal = (props: any) => {
                 買い物終了
               </button>
               <button
-                onClick={props.onClick}
+                onClick={() => {
+                  shoppingIsOver();
+                }}
                 type="button"
                 className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 "
               >

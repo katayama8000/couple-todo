@@ -8,8 +8,8 @@ function MyApp({ Component, pageProps }: AppProps) {
     <>
       <div className="text-center">
         <Link href="/"> | index</Link>
-        <Link href="/about"> | about</Link>
         <Link href="/home"> | Home</Link>
+        <Link href="/about"> | about</Link>
       </div>
       <ThemeProvider attribute="class" defaultTheme="light">
         <Component {...pageProps} />

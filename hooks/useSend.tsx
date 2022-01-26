@@ -1,6 +1,5 @@
 import { useState } from 'react'
-
-
+//FB
 import { db } from "../firebase";
 import {
   collection,
@@ -12,13 +11,8 @@ import {
   updateDoc,
   setDoc,
 } from "firebase/firestore";
-
-type list = {
-  value: string;
-  readonly id: number;
-  checked: boolean;
-  removed: boolean;
-};
+//type
+import { list } from "../Types/ListType";
 
 export const useSend = () => {
   const [tmplist, setTmpList] = useState<string>("");
@@ -35,12 +29,11 @@ export const useSend = () => {
       value: tmplist,
       id: new Date().getTime(),
       checked: false,
-      removed: false,
     };
 
-    console.log(lists);
     setLists([...lists,newList]);
     setTmpList("");
+    console.log(lists);
   };
 
 

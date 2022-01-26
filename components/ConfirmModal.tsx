@@ -1,10 +1,15 @@
-import React, { useState } from "react";
+import React from "react";
+import { flagState } from '../pages/index'
 
-export const OverModal = (props: any) => {
-  const finishShopping = (): void => {
-    //firebaseに送信
-    props.onClick();
-  };
+export const ConfirmModal = () => {
+
+  const shppingIsOverY = () => {
+    flagState.comfirmFlag = !flagState.comfirmFlag;
+    flagState.doneFlag = !flagState.doneFlag;
+  }
+  const shppingIsOverN = () => {
+    flagState.comfirmFlag = !flagState.comfirmFlag;
+  }
 
   return (
     <div>
@@ -22,14 +27,14 @@ export const OverModal = (props: any) => {
 
           <div className="inline-block align-bottom bg-white rounded-lg text-center overflow-hidden shadow-xl transform transition-all">
             <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 text-black">
-              <div>すべての購入をできていません</div>
+              <div>すべての商品購入をできていません</div>
               <br></br>
               <div>買い物を終了しますか？</div>
             </div>
             <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
               <button
                 onClick={() => {
-                  finishShopping();
+                  shppingIsOverY();
                 }}
                 type="button"
                 className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-400 text-base font-medium text-white hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -37,7 +42,9 @@ export const OverModal = (props: any) => {
                 はい
               </button>
               <button
-                onClick={props.onClick}
+                onClick={() => {
+                  shppingIsOverN();
+                }}
                 type="button"
                 className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 "
               >
