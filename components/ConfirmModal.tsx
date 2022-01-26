@@ -4,11 +4,11 @@ import { flagState } from '../pages/index'
 export const ConfirmModal = () => {
 
   const shppingIsOverY = () => {
-    flagState.comfirmFlag = !flagState.comfirmFlag;
-    flagState.doneFlag = !flagState.doneFlag;
+    flagState.comfirmFlag = false;
+    flagState.doneFlag = true;
   }
   const shppingIsOverN = () => {
-    flagState.comfirmFlag = !flagState.comfirmFlag;
+    flagState.comfirmFlag = false;
   }
 
   return (

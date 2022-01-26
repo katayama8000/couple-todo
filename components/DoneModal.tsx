@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { flagState } from "../pages/index";
 //FB
 import { doc, deleteDoc } from "firebase/firestore";
-import { setDoc } from "firebase/firestore";
+import { collection, addDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
 const useInputSum = () => {
@@ -15,13 +15,14 @@ const useInputSum = () => {
       return;
     }
     let today = new Date();
-    await setDoc(doc(db, "shopping", "totalCost"), {
+    await addDoc(collection(db, "totalcost"), {
       cost: sum,
       year: today.getFullYear(),
       month: today.getMonth() + 1,
       day: today.getDate(),
+      sec: today.getMilliseconds(),
     });
-    flagState.doneFlag = !flagState.doneFlag;
+    flagState.doneFlag = false
   };
   const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSum(e.target.valueAsNumber);
@@ -33,7 +34,7 @@ export const DoneModal = () => {
   const { sum, handleOnSubmit, handleOnChange } = useInputSum();
 
   const shoppingIsOver = (): void => {
-    flagState.doneFlag = !flagState.doneFlag;
+    flagState.doneFlag = false;
   };
 
   return (

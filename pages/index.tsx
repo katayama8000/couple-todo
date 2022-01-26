@@ -1,5 +1,5 @@
 import type { NextPage } from "next";
-import { useEffect, useState } from "react";
+import { useEffect, useState,useCallback } from "react";
 
 //components
 import { ChangeThemeButton } from "../components/ChangeThemeButton";
@@ -19,8 +19,8 @@ export const flagState = proxy({ comfirmFlag: false, doneFlag: false });
 
 const Home: NextPage = () => {
   const flag = useSnapshot(flagState);
-
-  const { tmplist, lists, setLists, handleOnChange, handleOnSubmit } = useSend();
+  const { tmplist, lists, setLists, handleOnChange, handleOnSubmit } =
+    useSend();
   const { shoppingList, setShoppingList, handleOnRemove, handleOnCheck } =
     useEditList();
 
@@ -39,7 +39,7 @@ const Home: NextPage = () => {
       let dataFromDB = doc.data();
       setShoppingList(dataFromDB?.shoppingList);
     });
-  }, []);
+  }, [setShoppingList]);
 
   const handleOnEdit = (id: number, value: string) => {
     const deepCopy = lists.map((list) => ({ ...list }));
@@ -53,11 +53,13 @@ const Home: NextPage = () => {
     setLists(newlists);
   };
 
-  const shoppingIsOver = async () => {
+  const shoppingIsOver = useCallback(async () => {
+    console.log("shoppingIsOver");
     let i: number = 0;
     shoppingList?.forEach((list) => {
       if (list.checked === false) {
-        flagState.comfirmFlag = !flagState.comfirmFlag;
+        console.log("false");
+        flagState.comfirmFlag = true;
       } else {
         i++;
       }
@@ -66,9 +68,9 @@ const Home: NextPage = () => {
     if (shoppingList?.length === 0) {
       alert("何も買ってないよ");
     } else if (shoppingList?.length === i) {
-      flagState.doneFlag = !flagState.doneFlag;
+      flagState.doneFlag = true;
     }
-  };
+  }, [shoppingList]);
 
   return (
     <div className="mx-5 pb-24">
@@ -87,21 +89,23 @@ const Home: NextPage = () => {
       >
         console
       </button>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleOnSubmit();
-        }}
-        className="my-5"
-      >
-        <input
-          type="text"
-          value={tmplist}
-          onChange={(e) => handleOnChange(e)}
-          className="bg-indigo-400"
-        />
-        <input type="submit" value="追加" onSubmit={handleOnSubmit} />
-      </form>
+      <div className="m-auto block p-5 justify-center w-max">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleOnSubmit();
+          }}
+          className="m-auto"
+        >
+          <input
+            type="text"
+            value={tmplist}
+            onChange={(e) => handleOnChange(e)}
+            className="bg-indigo-400"
+          />
+          <input type="submit" value="追加" onSubmit={handleOnSubmit} />
+        </form>
+      </div>
       <ul>
         {lists.map((list) => {
           return <li key={list.id}></li>;
