@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 //FB
 import { db } from "../firebase";
 import {
@@ -31,10 +31,22 @@ export const useSend = () => {
       checked: false,
     };
 
-    setLists([...lists,newList]);
+    const oldList:list[] = [...lists]
+
+    setLists([...oldList, newList]);
     setTmpList("");
-    console.log(lists);
   };
+
+  useEffect(() => {
+    const handleOnsend = async () => {
+      await setDoc(doc(db, "shopping", "list"), {
+        shoppingList: lists,
+      });
+    };
+    if (lists.length !== 0) {
+      handleOnsend();
+    }
+  },[lists])
 
   return { tmplist, lists, setLists, handleOnChange, handleOnSubmit };
 };
