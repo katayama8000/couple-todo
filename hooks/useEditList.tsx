@@ -6,7 +6,7 @@ import { setDoc, onSnapshot, doc } from "firebase/firestore";
 import { list } from "../Types/ListType";
 
 export const useEditList = () => {
-  const [shoppingList, setShoppingList] = useState<list[]>();
+  const [shoppingList, setShoppingList] = useState<list[]>([]);
 
   const handleOnRemove = useCallback(
     async (id: number) => {

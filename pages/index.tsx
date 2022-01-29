@@ -1,5 +1,5 @@
 import type { NextPage } from "next";
-import { useEffect, useState,useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 
 //components
 import { ChangeThemeButton } from "../components/ChangeThemeButton";
@@ -19,46 +19,88 @@ export const flagState = proxy({ comfirmFlag: false, doneFlag: false });
 
 const Home: NextPage = () => {
   const flag = useSnapshot(flagState);
-  const { tmplist, lists, setLists, handleOnChange, handleOnSubmit } =
-    useSend();
-  const { shoppingList, setShoppingList, handleOnRemove, handleOnCheck } =
-    useEditList();
+  // const { tmplist, lists, setLists, handleOnChange, handleOnSubmit } =useSend();
+  const [tmplist, setTmpList] = useState<string>("");
+  const renderFlgRef = useRef(false);
+  const { shoppingList, setShoppingList, handleOnRemove, handleOnCheck } = useEditList();
 
-  //DBをクリアしてしまうのでとりあえずなし
-  // useEffect(() => {
-  //   const send = async () => {
-  //     await setDoc(doc(db, "shopping", "list"), {
-  //       shoppingList: lists,
-  //     });
-  //   };
-  //   send();
-  // }, [lists]);
+  //---------------------------------------------------------------------
+  const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log(e.target.value);
+    setTmpList(e.target.value);
+  };
+
+  const handleOnSubmit = async () => {
+    if (!tmplist) return;
+
+    const newList: list = {
+      value: tmplist,
+      id: new Date().getTime(),
+      checked: false,
+    };
+    setShoppingList([newList, ...shoppingList!]);
+    setTmpList("");
+  };
 
   useEffect(() => {
-    onSnapshot(doc(db, "shopping", "list"), (doc) => {
-      let dataFromDB = doc.data();
-      setShoppingList(dataFromDB?.shoppingList);
-    });
-  }, [setShoppingList]);
+    if (renderFlgRef.current) {
+      console.log("初回")
+      let unmounted = false;
 
-  const handleOnEdit = (id: number, value: string) => {
-    const deepCopy = lists.map((list) => ({ ...list }));
-    // ディープコピーされた配列に Array.map() を適用
-    const newlists = deepCopy.map((list) => {
-      if (list.id === id) {
-        list.value = value;
+      const handleOnsend = async () => {
+        if (!unmounted) {
+          try {
+            await setDoc(doc(db, "shopping", "list"), {
+              shoppingList: shoppingList,
+            });
+          } catch (e) {
+            console.log("FBerror")
+          }
+        }
+      };
+      if (shoppingList?.length! !== 0 ) {
+        console.log(shoppingList?.length);
+        console.log("実行")
+        handleOnsend();
       }
-      return list;
-    });
-    setLists(newlists);
-  };
+      return () => {
+        unmounted = true;
+      };
+    } else {
+      renderFlgRef.current = true;
+    }
+  }, [shoppingList]);
+  //---------------------------------------------------------------------
+
+  useEffect(() => {
+      //FBの変更を検知して、stateに代入
+      onSnapshot(doc(db, "shopping", "list"), (doc) => {
+        let dataFromDB = doc.data();
+        //shoppingListの状態を配列として保つ必要がある
+        dataFromDB !== undefined
+          ? setShoppingList(dataFromDB?.shoppingList)
+          : setShoppingList([]);
+        console.log(shoppingList);
+      });
+    } , [setShoppingList]);
+
+  // const handleOnEdit = (id: number, value: string) => {
+  //   const deepCopy = lists.map((list) => ({ ...list }));
+  //   // ディープコピーされた配列に Array.map() を適用
+  //   const newlists = deepCopy.map((list) => {
+  //     if (list.id === id) {
+  //       list.value = value;
+  //     }
+  //     return list;
+  //   });
+  //   setLists(newlists);
+  // };
 
   const shoppingIsOver = useCallback(async () => {
     console.log("shoppingIsOver");
     let i: number = 0;
     shoppingList?.forEach((list) => {
       if (list.checked === false) {
-        console.log("false");
         flagState.comfirmFlag = true;
       } else {
         i++;
@@ -66,7 +108,7 @@ const Home: NextPage = () => {
     });
 
     if (shoppingList?.length === 0) {
-      alert("何も買ってないよ");
+      //何も買ってないよ
     } else if (shoppingList?.length === i) {
       flagState.doneFlag = true;
     }
@@ -77,11 +119,10 @@ const Home: NextPage = () => {
       <h1 className="my-3 p-5 text-center text-3xl text-white bg-indigo-400 font-bold rounded">
         夫婦の買い物
       </h1>
+      <button onClick={() => console.log(shoppingList)}>button</button>
       {flag.doneFlag ? <DoneModal /> : null}
       {flag.comfirmFlag ? <ConfirmModal /> : null}
-
       <ChangeThemeButton />
-
       <button
         onClick={() => {
           console.log(shoppingList);
@@ -106,11 +147,11 @@ const Home: NextPage = () => {
           <input type="submit" value="追加" onSubmit={handleOnSubmit} />
         </form>
       </div>
-      <ul>
+      {/* <ul>
         {lists.map((list) => {
           return <li key={list.id}></li>;
         })}
-      </ul>
+      </ul> */}
       <hr></hr>
       <ul>
         {shoppingList?.map((list: list) => {

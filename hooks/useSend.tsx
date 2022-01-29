@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from "react";
 //FB
 import { db } from "../firebase";
 import {
@@ -17,36 +17,46 @@ import { list } from "../Types/ListType";
 export const useSend = () => {
   const [tmplist, setTmpList] = useState<string>("");
   const [lists, setLists] = useState<list[]>([]);
+  const renderFlgRef = useRef(false);
 
   const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTmpList(e.target.value);
+    console.log(e.target.value);
   };
 
-  const handleOnSubmit = async() => {
+  const handleOnSubmit = async () => {
     if (!tmplist) return;
-
+    
     const newList: list = {
       value: tmplist,
       id: new Date().getTime(),
       checked: false,
     };
+    
+    console.log(newList);
+    console.log(lists);
+    //const oldList: list[] = [...lists];
 
-    const oldList:list[] = [...lists]
-
-    setLists([...oldList, newList]);
+    setLists([...lists!, newList]);
     setTmpList("");
   };
 
   useEffect(() => {
-    const handleOnsend = async () => {
-      await setDoc(doc(db, "shopping", "list"), {
-        shoppingList: lists,
-      });
-    };
-    if (lists.length !== 0) {
-      handleOnsend();
+    if (renderFlgRef.current) {
+      const handleOnsend = async () => {
+        await setDoc(doc(db, "shopping", "list"), {
+          shoppingList: lists,
+        });
+      };
+
+      console.log(lists)
+      if (lists.length !== 0) {
+        handleOnsend();
+      }
+    } else {
+      renderFlgRef.current = true;
     }
-  },[lists])
+  }, [lists]);
 
   return { tmplist, lists, setLists, handleOnChange, handleOnSubmit };
 };
