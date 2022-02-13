@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
+
+
+import React, { useState } from "react";
 //global
 import { flagState } from "../pages/index";
 //FB
@@ -7,55 +8,43 @@ import { doc, deleteDoc } from "firebase/firestore";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
-const Qiita = () => {
-  const [totalAmount, setTotalAmount] = useState(0);
-  const renderFlgRef = useRef(false);
-  const { register, handleSubmit } = useForm<IFormInput>();
+type sumType = {
+  sum: number;
+};
+const useInputSum = () => {
+  const [sum, setSum] = useState<number>(0);
 
-  interface IFormInput {
-    cost: number;
-  }
-
-  // useEffect(() => {
-  //   if (renderFlgRef.current) {
-  //     const fetch = async () => {
-  //       let today = new Date();
-  //       await addDoc(collection(db, "totalcost"), {
-  //         cost: totalAmount,
-  //         year: today.getFullYear(),
-  //         month: today.getMonth() + 1,
-  //         day: today.getDate(),
-  //         sec: today.getMilliseconds(),
-  //       });
-
-  //       flagState.doneFlag = false;
-  //       await deleteDoc(doc(db, "shopping", "list"));
-  //     };
-  //     fetch();
-  //   } else {
-  //     renderFlgRef.current = true;
-  //   }
-  // }, [totalAmount]);
-
-  const onSubmit: SubmitHandler<IFormInput> = async (Amount: IFormInput) => {
-    console.log(Amount);
-    console.log(Amount.cost);
-    let amountCost = Number(Amount.cost);
-    console.log(typeof amountCost);
-
-    setTotalAmount(Amount.cost);
-    let today = new Date();
-    await addDoc(collection(db, "totalcost"), {
-      cost: amountCost,
-      year: today.getFullYear(),
-      month: today.getMonth() + 1,
-      day: today.getDate(),
-      sec: today.getMilliseconds(),
-    });
-
-    flagState.doneFlag = false;
-    await deleteDoc(doc(db, "shopping", "list"));
+  const handleOnSubmit = async () => {
+    console.log(sum);
+    let isMounted = true; // note this flag denote mount status
+    if (isMounted) {
+      if (!sum) {
+        alert("合計金額を入力してください");
+        return;
+      }
+      let today = new Date();
+      await addDoc(collection(db, "totalcost"), {
+        cost: sum,
+        year: today.getFullYear(),
+        month: today.getMonth() + 1,
+        day: today.getDate(),
+        sec: today.getMilliseconds(),
+      });
+      flagState.doneFlag = false;
+      await deleteDoc(doc(db, "shopping", "list"));
+    }
+    return () => {
+      isMounted = false;
+    };
   };
+  const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSum(e.target.valueAsNumber);
+  };
+  return { sum, handleOnSubmit, handleOnChange };
+};
+
+export const DoneModal = () => {
+  const { sum, handleOnSubmit, handleOnChange } = useInputSum();
 
   const shoppingIsOver = (): void => {
     flagState.doneFlag = false;
@@ -79,24 +68,29 @@ const Qiita = () => {
             <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 text-black">
               合計金額
             </div>
-            <div className="text-gray-400">
-              0~10万までの数字を<br></br>入力してください
-            </div>
 
             <div className="flex justify-center">
-              <form onSubmit={handleSubmit(onSubmit)}>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleOnSubmit();
+                }}
+                className="my-5"
+              >
                 <input
                   type="number"
-                  {...register("cost", { min: 0, max: 100000 })}
+                  //value={sum}
+                  onChange={(e) => handleOnChange(e)}
                   className="bg-indigo-400 text-center flex justify-center p-2"
                 />
-                <input type="submit" />
               </form>
             </div>
 
             <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
               <button
-                onClick={handleSubmit(onSubmit)}
+                onClick={() => {
+                  handleOnSubmit();
+                }}
                 type="button"
                 className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-400 text-base font-medium text-white hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
@@ -119,4 +113,3 @@ const Qiita = () => {
   );
 };
 
-export default Qiita

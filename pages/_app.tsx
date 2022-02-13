@@ -21,6 +21,7 @@ function MyApp({ Component, pageProps }: AppProps) {
           <Link href="/about"> | about</Link>
           <Link href="/Qiita"> | Qiita</Link>
           <Link href="/leak"> | Leak</Link>
+          <Link href="/date"> | Date</Link>
         </div>
         <ThemeProvider attribute="class" defaultTheme="light">
           <Component {...pageProps} />

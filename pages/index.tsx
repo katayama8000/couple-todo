@@ -1,6 +1,5 @@
 import type { NextPage } from "next";
 import { useEffect, useState, useCallback, useRef } from "react";
-
 //components
 import { ChangeThemeButton } from "../components/ChangeThemeButton";
 import { DoneModal } from "../components/DoneModal";
@@ -19,7 +18,7 @@ export const flagState = proxy({ comfirmFlag: false, doneFlag: false });
 
 const Home: NextPage = () => {
   const flag = useSnapshot(flagState);
-  // const { tmplist, lists, setLists, handleOnChange, handleOnSubmit } =useSend();
+  //const { tmplist, shoppingList, setShoppingList, handleOnChange, handleOnSubmit } =useSend();
   const [tmplist, setTmpList] = useState<string>("");
   const renderFlgRef = useRef(false);
   const { shoppingList, setShoppingList, handleOnRemove, handleOnCheck } = useEditList();
@@ -44,7 +43,7 @@ const Home: NextPage = () => {
 
   useEffect(() => {
     if (renderFlgRef.current) {
-      console.log("初回")
+      console.log("初回");
       let unmounted = false;
 
       const handleOnsend = async () => {
@@ -54,13 +53,12 @@ const Home: NextPage = () => {
               shoppingList: shoppingList,
             });
           } catch (e) {
-            console.log("FBerror")
+            console.log("FBerror");
           }
         }
       };
-      if (shoppingList?.length! !== 0 ) {
-        console.log(shoppingList?.length);
-        console.log("実行")
+      if (shoppingList?.length! !== 0) {
+        console.log("実行");
         handleOnsend();
       }
       return () => {
@@ -73,16 +71,18 @@ const Home: NextPage = () => {
   //---------------------------------------------------------------------
 
   useEffect(() => {
-      //FBの変更を検知して、stateに代入
-      onSnapshot(doc(db, "shopping", "list"), (doc) => {
-        let dataFromDB = doc.data();
-        //shoppingListの状態を配列として保つ必要がある
-        dataFromDB !== undefined
-          ? setShoppingList(dataFromDB?.shoppingList)
-          : setShoppingList([]);
-        console.log(shoppingList);
-      });
-    } , [setShoppingList]);
+    //FBの変更を検知して、stateに代入
+    onSnapshot(doc(db, "shopping", "list"), (doc) => {
+      let dataFromDB = doc.data();
+      //shoppingListの状態を配列として保つ必要がある
+      console.log(dataFromDB);
+      console.log(typeof(dataFromDB));
+      dataFromDB !== undefined
+        ? setShoppingList(dataFromDB?.shoppingList)
+        : setShoppingList([]);
+      console.log(shoppingList);
+    });
+  }, [setShoppingList]);
 
   // const handleOnEdit = (id: number, value: string) => {
   //   const deepCopy = lists.map((list) => ({ ...list }));

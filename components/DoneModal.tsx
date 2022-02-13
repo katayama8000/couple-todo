@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
 //global
 import { flagState } from "../pages/index";
 //FB
@@ -6,43 +7,34 @@ import { doc, deleteDoc } from "firebase/firestore";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
-type sumType = {
-  sum: number;
-};
-const useInputSum = () => {
-  const [sum, setSum] = useState<number>(0);
-
-  const handleOnSubmit = async () => {
-    console.log(sum);
-    let isMounted = true; // note this flag denote mount status
-    if (isMounted) {
-      if (!sum) {
-        alert("合計金額を入力してください");
-        return;
-      }
-      let today = new Date();
-      await addDoc(collection(db, "totalcost"), {
-        cost: sum,
-        year: today.getFullYear(),
-        month: today.getMonth() + 1,
-        day: today.getDate(),
-        sec: today.getMilliseconds(),
-      });
-      flagState.doneFlag = false;
-      await deleteDoc(doc(db, "shopping", "list"));
-    }
-    return () => {
-      isMounted = false;
-    };
-  };
-  const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSum(e.target.valueAsNumber);
-  };
-  return { sum, handleOnSubmit, handleOnChange };
-};
-
 export const DoneModal = () => {
-  const { sum, handleOnSubmit, handleOnChange } = useInputSum();
+  const [totalAmount, setTotalAmount] = useState(0);
+  const renderFlgRef = useRef(false);
+  const { register, handleSubmit } = useForm<IFormInput>();
+
+  interface IFormInput {
+    cost: number;
+  }
+
+  const onSubmit: SubmitHandler<IFormInput> = async (Amount: IFormInput) => {
+    console.log(Amount);
+    console.log(Amount.cost);
+    let amountCost = Number(Amount.cost);
+    console.log(typeof amountCost);
+
+    setTotalAmount(Amount.cost);
+    let today = new Date();
+    await addDoc(collection(db, "totalcost"), {
+      cost: amountCost,
+      year: today.getFullYear(),
+      month: today.getMonth() + 1,
+      day: today.getDate(),
+      sec: today.getMilliseconds(),
+    });
+
+    flagState.doneFlag = false;
+    await deleteDoc(doc(db, "shopping", "list"));
+  };
 
   const shoppingIsOver = (): void => {
     flagState.doneFlag = false;
@@ -66,29 +58,24 @@ export const DoneModal = () => {
             <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 text-black">
               合計金額
             </div>
+            <div className="text-gray-400">
+              0~10万までの数字を<br></br>入力してください
+            </div>
 
             <div className="flex justify-center">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleOnSubmit();
-                }}
-                className="my-5"
-              >
+              <form onSubmit={handleSubmit(onSubmit)}>
                 <input
                   type="number"
-                  //value={sum}
-                  onChange={(e) => handleOnChange(e)}
+                  {...register("cost", { min: 0, max: 100000 })}
                   className="bg-indigo-400 text-center flex justify-center p-2"
                 />
+                <input type="submit" />
               </form>
             </div>
 
             <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
               <button
-                onClick={() => {
-                  handleOnSubmit();
-                }}
+                onClick={handleSubmit(onSubmit)}
                 type="button"
                 className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-400 text-base font-medium text-white hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
@@ -110,3 +97,4 @@ export const DoneModal = () => {
     </div>
   );
 };
+
